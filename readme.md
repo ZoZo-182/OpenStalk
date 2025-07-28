@@ -8,4 +8,4 @@ How to run:
 
 
 
-![Demo](giphy.gif)
+![Demo](giphy.mp4)
