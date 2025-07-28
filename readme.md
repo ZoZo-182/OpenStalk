@@ -5,3 +5,7 @@ How to run:
 4. go mod tidy (bubbletea, lipgloss, etc.)
 5. build: go build -o OpenStalk
 6. run: ./OpenStalk
+
+
+
+![Demo](giphy.gif)
