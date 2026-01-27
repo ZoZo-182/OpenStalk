@@ -1,3 +1,5 @@
+## Don't touch this - it's slop that will be redone: SoonTM.
+
 How to run:
 1. Have go? (go version)
 2. git clone https://github.com/ZoZo-182/OpenStalk.git
