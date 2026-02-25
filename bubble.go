@@ -92,8 +92,8 @@ func (d customDelegate) Render(w io.Writer, m list.Model, index int, listItem li
 	desc := i.Description()
 
 	if index == m.Index() {
-		str = selectedStyle.Render("🌈 " + str)
-		desc = "  " + countStyle.Render(fmt.Sprintf("%d issues", i.r.Count)) +
+		str = selectedStyle.Render(str)
+		desc = "  "  +
 			" • " + languageStyle.Render(func() string {
 			if i.r.Language == "" {
 				return "N/A"
@@ -125,7 +125,7 @@ func (d prDelegate) Render(w io.Writer, m list.Model, index int, listItem list.I
 	desc := i.Description()
 
 	if index == m.Index() {
-		title = selectedStyle.Render("🔥 " + title)
+		title = selectedStyle.Render(title)
 		desc = "  " + bodyStyle.Render(desc)
 	} else {
 		titleColor := getColorForIndex(index)
@@ -139,23 +139,22 @@ func (d prDelegate) Render(w io.Writer, m list.Model, index int, listItem list.I
 // Helper function to get different colors for different items
 func getColorForIndex(index int) string {
 	colors := []string{
-		"#FF6B6B", // Red
-		"#4ECDC4", // Turquoise
-		"#45B7D1", // Blue
-		"#96CEB4", // Green
-		"#FFEAA7", // Yellow
-		"#DDA0DD", // Plum
-		"#98D8C8", // Mint
-		"#F7DC6F", // Light yellow
-		"#AED6F1", // Light blue
-		"#D7BDE2", // Light purple
-		"#A9DFBF", // Light green
-		"#F8C471", // Orange
+		"#FF6B6B", 
+		"#4ECDC4", 
+		"#45B7D1", 
+		"#96CEB4", 
+		"#FFEAA7", 
+		"#DDA0DD", 
+		"#98D8C8", 
+		"#F7DC6F", 
+		"#AED6F1", 
+		"#D7BDE2", 
+		"#A9DFBF", 
+		"#F8C471", 
 	}
 	return colors[index%len(colors)]
 }
 
-// Wrap your RepoInfo as a list.Item
 type repoItem struct {
 	r RepoInfo
 }
@@ -166,7 +165,7 @@ func (i repoItem) Description() string {
 	if lang == "" {
 		lang = "N/A"
 	}
-	return fmt.Sprintf("%d issues • %s", i.r.Count, lang)
+	return fmt.Sprintf("%s", lang)
 }
 func (i repoItem) FilterValue() string { return i.r.Name }
 
