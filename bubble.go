@@ -136,32 +136,6 @@ func (d prDelegate) Render(w io.Writer, m list.Model, index int, listItem list.I
 	fmt.Fprint(w, title+"\n"+desc+"\n")
 }
 
-type commitDelegate struct{}
-
-func (d commitDelegate) Height() int                               { return 3 }
-func (d commitDelegate) Spacing() int                              { return 0 }
-func (d commitDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd { return nil }
-func (d commitDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(commitItem)
-	if !ok {
-		return
-	}
-
-	title := i.Title()
-	desc := i.Description()
-
-	if index == m.Index() {
-		title = selectedStyle.Render("💾 " + title)
-		desc = "  " + bodyStyle.Render(desc)
-	} else {
-		titleColor := getColorForIndex(index)
-		title = lipgloss.NewStyle().Foreground(lipgloss.Color(titleColor)).Render("  " + title)
-		desc = bodyStyle.Render("  " + desc)
-	}
-
-	fmt.Fprint(w, title+"\n"+desc+"\n")
-}
-
 // Helper function to get different colors for different items
 func getColorForIndex(index int) string {
 	colors := []string{
@@ -216,44 +190,11 @@ func (i prItem) Description() string {
 
 func (i prItem) FilterValue() string { return i.pr.Title }
 
-type commitItem struct {
-	commit Commit
-}
-
-func (i commitItem) Title() string {
-	// Get first line of commit message (title)
-	lines := strings.Split(i.commit.Message, "\n")
-	title := lines[0]
-	if len(title) > 60 {
-		title = title[:57] + "..."
-	}
-	return fmt.Sprintf("%.7s: %s", i.commit.SHA, title)
-}
-
-func (i commitItem) Description() string {
-	// Show author and full message if it's multiline
-	lines := strings.Split(i.commit.Message, "\n")
-	if len(lines) > 1 && strings.TrimSpace(lines[1]) != "" {
-		desc := strings.TrimSpace(lines[1])
-		if len(desc) > 80 {
-			desc = desc[:77] + "..."
-		}
-		return fmt.Sprintf("👤 %s • %s", i.commit.Author, desc)
-	}
-	return fmt.Sprintf("👤 %s", i.commit.Author)
-}
-
-func (i commitItem) FilterValue() string { return i.commit.Message }
 
 // Message types for async operations
 type pullRequestsLoadedMsg struct {
 	prs []PullRequest
 	err error
-}
-
-type commitsLoadedMsg struct {
-	commits []Commit
-	err     error
 }
 
 type bookmarkRepoLoadedMsg struct {
@@ -269,13 +210,6 @@ func fetchPullRequestsCmd(pullsURL string) tea.Cmd {
 	})
 }
 
-// Command to fetch commits
-func fetchCommitsCmd(repoAPIURL string) tea.Cmd {
-	return tea.Cmd(func() tea.Msg {
-		commits, err := fetchRecentCommits(repoAPIURL, 10)
-		return commitsLoadedMsg{commits: commits, err: err}
-	})
-}
 
 // Command to fetch bookmark repo details
 func fetchBookmarkRepoCmd(repoURL string) tea.Cmd {
@@ -320,7 +254,6 @@ const (
 	repoListView viewState = iota
 	repoDetailView
 	pullRequestView
-	commitView
 	bookmarksView
 	addBookmarkView
 	healthCheckView
@@ -332,7 +265,6 @@ type model struct {
 	list         list.Model
 	bookmarkList list.Model
 	prList       list.Model
-	commitList   list.Model
 	currentView  viewState
 	selected     RepoInfo
 	width        int
@@ -375,18 +307,6 @@ func newModel(repos []RepoInfo) model {
 		Bold(true).
 		Padding(0, 1)
 
-	commitDelegate := commitDelegate{}
-	commitList := list.New([]list.Item{}, commitDelegate, 0, 0) // Start with 0 dimensions
-	commitList.Title = "💾 Recent Commits"
-	commitList.SetShowHelp(true)
-	commitList.SetShowStatusBar(true)
-	commitList.SetFilteringEnabled(true)
-	commitList.Styles.Title = lipgloss.NewStyle().
-		Background(lipgloss.Color("#9B59B6")).
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Bold(true).
-		Padding(0, 1)
-
 	bookmarkDelegate := customDelegate{} // Reuse the same delegate as repo list
 	bookmarkList := list.New([]list.Item{}, bookmarkDelegate, 0, 0)
 	bookmarkList.Title = "🔖 Bookmarked Repositories"
@@ -422,7 +342,6 @@ func newModel(repos []RepoInfo) model {
 		list:         l,
 		bookmarkList: bookmarkList,
 		prList:       prList,
-		commitList:   commitList,
 		currentView:  repoListView,
 		width:        0,
 		height:       0,
@@ -440,26 +359,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetHeight(msg.Height - 4) // Leave space for title and help
 		m.prList.SetWidth(msg.Width)
 		m.prList.SetHeight(msg.Height - 4)
-		m.commitList.SetWidth(msg.Width)
-		m.commitList.SetHeight(msg.Height - 4)
 		m.bookmarkList.SetWidth(msg.Width)
 		m.bookmarkList.SetHeight(msg.Height - 4)
-		return m, nil
-
-	case commitsLoadedMsg:
-		m.loading = false
-		if msg.err != nil {
-			m.loadingText = fmt.Sprintf("Error loading commits: %v", msg.err)
-			return m, nil
-		}
-
-		// Convert commits to list items
-		items := make([]list.Item, len(msg.commits))
-		for i, commit := range msg.commits {
-			items[i] = commitItem{commit}
-		}
-		m.commitList.SetItems(items)
-		m.currentView = commitView
 		return m, nil
 
 	case pullRequestsLoadedMsg:
@@ -591,7 +492,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.currentView {
 			case repoListView:
 				m.currentView = bookmarksView
-			case repoDetailView, pullRequestView, commitView:
+			case repoDetailView, pullRequestView:
 				m.currentView = repoListView
 			}
 			return m, nil
@@ -638,19 +539,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 
-		case "c":
-			if m.currentView == repoDetailView && !m.loading {
-				m.loading = true
-				m.loadingText = "Loading commits..."
-				return m, fetchCommitsCmd(m.selected.APIURL)
-			}
-			return m, nil
-
 		case "esc":
 			switch m.currentView {
 			case repoDetailView:
 				m.currentView = repoListView
-			case pullRequestView, commitView, healthCheckView:
+			case pullRequestView, healthCheckView:
 				m.currentView = repoDetailView
 			case bookmarksView:
 				m.currentView = repoListView
@@ -672,10 +565,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case pullRequestView:
 		var cmd tea.Cmd
 		m.prList, cmd = m.prList.Update(msg)
-		return m, cmd
-	case commitView:
-		var cmd tea.Cmd
-		m.commitList, cmd = m.commitList.Update(msg)
 		return m, cmd
 	}
 
@@ -756,7 +645,7 @@ func (m model) View() string {
 				bodyStyle.Render(m.loadingText),
 				loadingBar)
 		} else {
-			help = helpStyle.Render("Press 'p' for pull requests • Press 'c' for commits • Press 'h' for health check • Press 'b' or 'esc' to go back • Press 'q' to quit")
+			help = helpStyle.Render("Press 'p' for pull requests • Press 'h' for health check • Press 'b' or 'esc' to go back • Press 'q' to quit")
 		}
 
 		return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, details, help)
@@ -771,17 +660,6 @@ func (m model) View() string {
 		}
 
 		return fmt.Sprintf("\n%s\n%s\n\n%s", header, m.prList.View(), help)
-
-	case commitView:
-		header := headerStyle.Render(fmt.Sprintf("💾 Commits for %s", m.selected.Name))
-		help := helpStyle.Render("Press 'b' or 'esc' to go back • Press 'q' to quit")
-
-		if len(m.commitList.Items()) == 0 {
-			noItems := bodyStyle.Render("No recent commits found.")
-			return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, noItems, help)
-		}
-
-		return fmt.Sprintf("\n%s\n%s\n\n%s", header, m.commitList.View(), help)
 	}
 
 	return ""

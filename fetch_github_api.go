@@ -232,59 +232,9 @@ func RepoDetailsEnhanced(repos []RepoInfo, daysAgo int) ([]RepoInfo, error) {
 	return repos, nil
 }
 
-type Commit struct {
-	SHA     string `json:"sha"`
-	Message string `json:"message"`
-	Author  string `json:"author"`
-}
-
-func fetchRecentCommits(repoAPIURL string, perPage int) ([]Commit, error) {
-	// Extract owner/repo from API URL
-	parts := strings.Split(repoAPIURL, "/")
-	if len(parts) < 6 {
-		return nil, fmt.Errorf("invalid repo URL format: %s", repoAPIURL)
-	}
-	owner := parts[4]
-	repo := parts[5]
-
-	// Construct commits API URL
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/commits?per_page=%d", owner, repo, perPage)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("fetchRecentCommits(): %v", err)
-	}
-	defer resp.Body.Close()
-
-	// GitHub commits API response structure
-	var githubCommits []struct {
-		SHA    string `json:"sha"`
-		Commit struct {
-			Message string `json:"message"`
-			Author  struct {
-				Name string `json:"name"`
-			} `json:"author"`
-		} `json:"commit"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&githubCommits); err != nil {
-		return nil, err
-	}
-
-	// Convert to our Commit struct
-	commits := make([]Commit, len(githubCommits))
-	for i, gc := range githubCommits {
-		commits[i] = Commit{
-			SHA:     gc.SHA,
-			Message: gc.Commit.Message,
-			Author:  gc.Commit.Author.Name,
-		}
-	}
-
-	return commits, nil
-}
 
 // Function to convert GitHub URL to API URL
+// is this for a search function within the tui?
 func githubURLToAPI(githubURL string) (string, error) {
 	// Remove trailing slash and .git if present
 	githubURL = strings.TrimSuffix(strings.TrimSuffix(githubURL, "/"), ".git")
