@@ -219,34 +219,6 @@ func fetchBookmarkRepoCmd(repoURL string) tea.Cmd {
 	})
 }
 
-type healthCheckLoadedMsg struct {
-	output string
-	err    error
-}
-
-func runHealthCheckCmd(repoURL string) tea.Cmd {
-	return tea.Cmd(func() tea.Msg {
-		exec.Command("chmod", "+x", "./health_check.sh").Run()
-
-		cmd := exec.Command("./health_check.sh", repoURL)
-		var stdout, stderr bytes.Buffer
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-
-		err := cmd.Run()
-		if err != nil {
-			return healthCheckLoadedMsg{
-				output: fmt.Sprintf("Error running health check: %v\nStderr: %s", err, stderr.String()),
-				err:    err,
-			}
-		}
-
-		return healthCheckLoadedMsg{
-			output: stdout.String(),
-			err:    nil,
-		}
-	})
-}
 
 type viewState int
 
@@ -256,7 +228,6 @@ const (
 	pullRequestView
 	bookmarksView
 	addBookmarkView
-	healthCheckView
 )
 
 type model struct {
@@ -273,7 +244,6 @@ type model struct {
 	loadingText  string
 	textInput    string
 	cursor       int
-	healthOutput string
 }
 
 func newModel(repos []RepoInfo) model {
@@ -405,16 +375,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loadingText = fmt.Sprintf("✅ Successfully bookmarked %s!", msg.repo.Name)
 		return m, nil
 
-	case healthCheckLoadedMsg:
-		m.loading = false
-		if msg.err != nil {
-			m.healthOutput = fmt.Sprintf("❌ Health check failed: %v", msg.err)
-		} else {
-			m.healthOutput = msg.output
-		}
-		m.currentView = healthCheckView
-		return m, nil
-
 	case tea.KeyMsg:
 		// Handle text input first when in addBookmarkView
 		if m.currentView == addBookmarkView && !m.loading {
@@ -531,19 +491,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 
-		case "h":
-			if m.currentView == repoDetailView && !m.loading {
-				m.loading = true
-				m.loadingText = "Running repository health check..."
-				return m, runHealthCheckCmd(m.selected.HTMLURL)
-			}
-			return m, nil
-
 		case "esc":
 			switch m.currentView {
 			case repoDetailView:
 				m.currentView = repoListView
-			case pullRequestView, healthCheckView:
+			case pullRequestView:
 				m.currentView = repoDetailView
 			case bookmarksView:
 				m.currentView = repoListView
@@ -613,15 +565,6 @@ func (m model) View() string {
 		help := helpStyle.Render("Press 'enter' to add • Press 'esc' to cancel • Press 'q' to quit")
 		return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, content, help)
 
-	case healthCheckView:
-		header := headerStyle.Render(fmt.Sprintf("🏥 Health Check Results for %s", m.selected.Name))
-
-		// Style the health output
-		styledOutput := detailStyle.Render(m.healthOutput)
-
-		help := helpStyle.Render("Press 'esc' to go back • Press 'q' to quit")
-		return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, styledOutput, help)
-
 	case repoDetailView:
 		r := m.selected
 
@@ -645,7 +588,7 @@ func (m model) View() string {
 				bodyStyle.Render(m.loadingText),
 				loadingBar)
 		} else {
-			help = helpStyle.Render("Press 'p' for pull requests • Press 'h' for health check • Press 'b' or 'esc' to go back • Press 'q' to quit")
+			help = helpStyle.Render("Press 'p' for pull requests • Press 'b' or 'esc' to go back • Press 'q' to quit")
 		}
 
 		return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, details, help)
