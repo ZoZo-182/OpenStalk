@@ -197,10 +197,6 @@ type pullRequestsLoadedMsg struct {
 	err error
 }
 
-type bookmarkRepoLoadedMsg struct {
-	repo RepoInfo
-	err  error
-}
 
 // Command to fetch pull requests
 func fetchPullRequestsCmd(pullsURL string) tea.Cmd {
@@ -211,30 +207,17 @@ func fetchPullRequestsCmd(pullsURL string) tea.Cmd {
 }
 
 
-// Command to fetch bookmark repo details
-func fetchBookmarkRepoCmd(repoURL string) tea.Cmd {
-	return tea.Cmd(func() tea.Msg {
-		repo, err := fetchBookmarkRepoDetails(repoURL)
-		return bookmarkRepoLoadedMsg{repo: repo, err: err}
-	})
-}
-
-
 type viewState int
 
 const (
 	repoListView viewState = iota
 	repoDetailView
 	pullRequestView
-	bookmarksView
-	addBookmarkView
 )
 
 type model struct {
 	repos        []RepoInfo
-	bookmarks    []RepoInfo
 	list         list.Model
-	bookmarkList list.Model
 	prList       list.Model
 	currentView  viewState
 	selected     RepoInfo
@@ -254,7 +237,7 @@ func newModel(repos []RepoInfo) model {
 
 	delegate := customDelegate{}
 	l := list.New(items, delegate, 0, 0)
-	l.Title = "🌈 Top Active Repositories (Last 7 Days)"
+	l.Title = "Top Active Repositories (Last 7 Days)"
 	l.SetShowHelp(true)
 	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(true)
@@ -267,7 +250,7 @@ func newModel(repos []RepoInfo) model {
 
 	prDelegate := prDelegate{}
 	prList := list.New([]list.Item{}, prDelegate, 0, 0) // Start with 0 dimensions
-	prList.Title = "🔥 Recent Pull Requests"
+	prList.Title = "Recent Pull Requests"
 	prList.SetShowHelp(true)
 	prList.SetShowStatusBar(true)
 	prList.SetFilteringEnabled(true)
@@ -277,45 +260,6 @@ func newModel(repos []RepoInfo) model {
 		Bold(true).
 		Padding(0, 1)
 
-	bookmarkDelegate := customDelegate{} // Reuse the same delegate as repo list
-	bookmarkList := list.New([]list.Item{}, bookmarkDelegate, 0, 0)
-	bookmarkList.Title = "🔖 Bookmarked Repositories"
-	bookmarkList.SetShowHelp(true)
-	bookmarkList.SetShowStatusBar(true)
-	bookmarkList.SetFilteringEnabled(true)
-	bookmarkList.Styles.Title = lipgloss.NewStyle().
-		Background(lipgloss.Color("#E67E22")).
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Bold(true).
-		Padding(0, 1)
-
-	var bookmarks []RepoInfo
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Printf("Bookmark loading failed, continuing with empty bookmarks: %v\n", r)
-				bookmarks = []RepoInfo{}
-			}
-		}()
-		bookmarks = loadBookmarks()
-	}()
-
-	bookmarkItems := make([]list.Item, len(bookmarks))
-	for i, bookmark := range bookmarks {
-		bookmarkItems[i] = repoItem{bookmark}
-	}
-	bookmarkList.SetItems(bookmarkItems)
-
-	return model{
-		repos:        repos,
-		bookmarks:    bookmarks,
-		list:         l,
-		bookmarkList: bookmarkList,
-		prList:       prList,
-		currentView:  repoListView,
-		width:        0,
-		height:       0,
-	}
 }
 
 func (m model) Init() tea.Cmd { return nil }
@@ -329,8 +273,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetHeight(msg.Height - 4) // Leave space for title and help
 		m.prList.SetWidth(msg.Width)
 		m.prList.SetHeight(msg.Height - 4)
-		m.bookmarkList.SetWidth(msg.Width)
-		m.bookmarkList.SetHeight(msg.Height - 4)
 		return m, nil
 
 	case pullRequestsLoadedMsg:
@@ -350,81 +292,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentView = pullRequestView
 		return m, nil
 
-	case bookmarkRepoLoadedMsg:
-		m.loading = false
-		if msg.err != nil {
-			m.loadingText = fmt.Sprintf("Error loading repository: %v", msg.err)
-			return m, nil
-		}
-
-		// Save the bookmark
-		saveBookmark(msg.repo)
-
-		// Update the bookmarks list
-		m.bookmarks = loadBookmarks()
-		bookmarkItems := make([]list.Item, len(m.bookmarks))
-		for i, bookmark := range m.bookmarks {
-			bookmarkItems[i] = repoItem{bookmark}
-		}
-		m.bookmarkList.SetItems(bookmarkItems)
-
-		// Clear text input and go back to bookmarks view
-		m.textInput = ""
-		m.cursor = 0
-		m.currentView = bookmarksView
-		m.loadingText = fmt.Sprintf("✅ Successfully bookmarked %s!", msg.repo.Name)
-		return m, nil
-
 	case tea.KeyMsg:
-		// Handle text input first when in addBookmarkView
-		if m.currentView == addBookmarkView && !m.loading {
-			switch msg.String() {
-			case "enter":
-				if strings.TrimSpace(m.textInput) != "" {
-					m.loading = true
-					m.loadingText = "Loading repository details..."
-					return m, fetchBookmarkRepoCmd(strings.TrimSpace(m.textInput))
-				}
-				return m, nil
-			case "esc":
-				m.currentView = bookmarksView
-				m.textInput = ""
-				m.cursor = 0
-				return m, nil
-			case "backspace":
-				if m.cursor > 0 {
-					m.textInput = m.textInput[:m.cursor-1] + m.textInput[m.cursor:]
-					m.cursor--
-				}
-				return m, nil
-			case "left":
-				if m.cursor > 0 {
-					m.cursor--
-				}
-				return m, nil
-			case "right":
-				if m.cursor < len(m.textInput) {
-					m.cursor++
-				}
-				return m, nil
-			case "home":
-				m.cursor = 0
-				return m, nil
-			case "end":
-				m.cursor = len(m.textInput)
-				return m, nil
-			case "ctrl+c", "q":
-				return m, tea.Quit
-			default:
-				// Handle regular character input (including a, d, p, etc.)
-				if len(msg.String()) == 1 {
-					char := msg.String()
-					m.textInput = m.textInput[:m.cursor] + char + m.textInput[m.cursor:]
-					m.cursor++
-				}
-				return m, nil
-			}
-		}
 
 		// Handle regular navigation keys for other views
 		switch msg.String() {
@@ -439,48 +307,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.selected = m.repos[idx]
 					m.currentView = repoDetailView
 				}
-			case bookmarksView:
-				idx := m.bookmarkList.Index()
-				if idx >= 0 && idx < len(m.bookmarks) {
-					m.selected = m.bookmarks[idx]
-					m.currentView = repoDetailView
-				}
 			}
 			return m, nil
 
 		case "b":
 			switch m.currentView {
-			case repoListView:
-				m.currentView = bookmarksView
 			case repoDetailView, pullRequestView:
 				m.currentView = repoListView
 			}
 			return m, nil
 
 		case "a":
-			if m.currentView == bookmarksView {
-				m.currentView = addBookmarkView
-				m.textInput = ""
-				m.cursor = 0
-			}
-			return m, nil
-
-		case "d", "delete":
-			if m.currentView == bookmarksView && len(m.bookmarkList.Items()) > 0 {
-				idx := m.bookmarkList.Index()
-				if idx >= 0 && idx < len(m.bookmarks) {
-					// Remove bookmark
-					removeBookmark(m.bookmarks[idx].HTMLURL)
-
-					// Update the bookmarks list
-					m.bookmarks = loadBookmarks()
-					bookmarkItems := make([]list.Item, len(m.bookmarks))
-					for i, bookmark := range m.bookmarks {
-						bookmarkItems[i] = repoItem{bookmark}
-					}
-					m.bookmarkList.SetItems(bookmarkItems)
-				}
-			}
 			return m, nil
 
 		case "p":
@@ -497,8 +334,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.currentView = repoListView
 			case pullRequestView:
 				m.currentView = repoDetailView
-			case bookmarksView:
-				m.currentView = repoListView
 			}
 			return m, nil
 		}
@@ -509,10 +344,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case repoListView:
 		var cmd tea.Cmd
 		m.list, cmd = m.list.Update(msg)
-		return m, cmd
-	case bookmarksView:
-		var cmd tea.Cmd
-		m.bookmarkList, cmd = m.bookmarkList.Update(msg)
 		return m, cmd
 	case pullRequestView:
 		var cmd tea.Cmd
@@ -526,45 +357,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	switch m.currentView {
 	case repoListView:
-		help := helpStyle.Render("Press 'b' for bookmarks • Press 'enter' to select • Press 'q' to quit")
+		help := helpStyle.Render("Press 'enter' to select • Press 'q' to quit")
 		return fmt.Sprintf("\n%s\n\n%s", m.list.View(), help)
-
-	case bookmarksView:
-		help := helpStyle.Render("Press 'a' to add bookmark • Press 'd' to delete • Press 'enter' to select • Press 'esc' to go back • Press 'q' to quit")
-		if len(m.bookmarkList.Items()) == 0 {
-			header := headerStyle.Render("🔖 No bookmarks yet")
-			noItems := bodyStyle.Render("Press 'a' to add your first bookmark!")
-			return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, noItems, help)
-		}
-		return fmt.Sprintf("\n%s\n\n%s", m.bookmarkList.View(), help)
-
-	case addBookmarkView:
-		header := headerStyle.Render("🔖 Add Repository Bookmark")
-
-		var content string
-		if m.loading {
-			loadingBar := m.renderLoadingBar()
-			content = fmt.Sprintf("%s\n\n%s",
-				bodyStyle.Render(m.loadingText),
-				loadingBar)
-		} else {
-			prompt := bodyStyle.Render("Enter GitHub repository URL (e.g., https://github.com/owner/repo):")
-
-			// Create text input display with cursor
-			input := m.textInput
-			if m.cursor < len(input) {
-				input = input[:m.cursor] + "│" + input[m.cursor:]
-			} else {
-				input = input + "│"
-			}
-
-			inputDisplay := detailStyle.Render(input)
-			content = fmt.Sprintf("%s\n\n%s", prompt, inputDisplay)
-		}
-
-		help := helpStyle.Render("Press 'enter' to add • Press 'esc' to cancel • Press 'q' to quit")
-		return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, content, help)
-
 	case repoDetailView:
 		r := m.selected
 
@@ -592,7 +386,6 @@ func (m model) View() string {
 		}
 
 		return fmt.Sprintf("\n%s\n\n%s\n\n%s", header, details, help)
-
 	case pullRequestView:
 		header := headerStyle.Render(fmt.Sprintf("🔥 Pull Requests for %s", m.selected.Name))
 		help := helpStyle.Render("Press 'b' or 'esc' to go back • Press 'q' to quit")
