@@ -47,6 +47,8 @@ type RepoMetadata struct {
 // an instance of Config. 
 // and then use the repoDetails function on this instance to actuall see info
 // about the repos with recent prs + certain star count
+// okay no method b/c only one member, really? get the queried data, return slice,
+// can use a loop on each repo to get the info, duh
 func RepoDetails(repos []RepoInfo) ([]RepoInfo, error) {
 	client := http.DefaultClient
 	for i, r := range repos {
