@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type RepoInfo struct {
@@ -12,14 +13,16 @@ type RepoInfo struct {
 	Name     string
 	HTMLURL  string
 	Language string
-	PullsURL string
 	Stars    int
 }
 
 type PullRequest struct {
 	Title   string `json:"title"`
 	HTMLURL string `json:"html_url"`
-	Number  int    `json:"number"`
+}
+
+type SearchResponse struct {
+	Items []PullRequest `json:"items"`
 }
 
 type RepoMetadata struct {
@@ -27,7 +30,6 @@ type RepoMetadata struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Language    string `json:"language"`
-	PullsURL    string `json:"pulls_url"`
 	Stars       int    `json:"stargazers_count"`
 }
 
@@ -44,49 +46,75 @@ type RepoMetadata struct {
 // about the repos with recent prs + certain star count
 // okay no method b/c only one member, really? get the queried data, return slice,
 // can use a loop on each repo to get the info, duh
-func RepoDetails(repos []RepoInfo) ([]RepoInfo, error) {
-	client := http.DefaultClient
-	for i, r := range repos {
-		req, _ := http.NewRequest("GET", r.APIURL, nil)
-		resp, err := client.Do(req)
-		if err != nil {
-			return nil, fmt.Errorf("RepoDetails(): %v", err)
-		}
-		defer resp.Body.Close()
 
-		var repoMetaData struct {
-			HTMLURL     string `json:"html_url"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-			Language    string `json:"language"`
-			PullsURL    string `json:"pulls_url"`
-			Stars       int    `json:"stargazers_count"`
-		}
-		if err := json.NewDecoder(resp.Body).Decode(&repoMetaData); err != nil {
-			return nil, err
-		}
+func reposFromPrs(prList []PullRequest) ([]string, error) {
+	repoURLs := []string{}
 
-		repos[i].Name = repoMetaData.Name
-		repos[i].HTMLURL = repoMetaData.HTMLURL
-		repos[i].Language = repoMetaData.Language
-		repos[i].PullsURL = repoMetaData.PullsURL
-		repos[i].Stars = repoMetaData.Stars
+	for _, pr := range prList {
+		url := strings.Split(pr.HTMLURL, "/pull")[0]
+		repoURLs = append(repoURLs, url)
 	}
-	return repos, nil
+
+	if len(repoURLs) == 0 {
+		return nil, fmt.Errorf("empty / nil repo urls from prs (reposFromPrs).")
+	}
+
+	return repoURLs, nil
 }
 
-func fetchRecentPulls(pullsURL string, perPage int) ([]PullRequest, error) {
-	// Trim the template suffix
-	url := strings.Split(pullsURL, "{")[0] + fmt.Sprintf("?state=open&sort=created&direction=desc&per_page=%d", perPage)
+//func RepoDetails(prList []PullRequest) ([]RepoInfo, error) {
+//	client := http.DefaultClient
+//	for i, pr := range prList {
+//		req, _ := http.NewRequest("GET", r.APIURL, nil)
+//		resp, err := client.Do(req)
+//		if err != nil {
+//			return nil, fmt.Errorf("RepoDetails(): %v", err)
+//		}
+//		defer resp.Body.Close()
+//
+//		var repoMetaData struct {
+//			HTMLURL     string `json:"html_url"`
+//			Name        string `json:"name"`
+//			Description string `json:"description"`
+//			Language    string `json:"language"`
+//			PullsURL    string `json:"pulls_url"`
+//			Stars       int    `json:"stargazers_count"`
+//		}
+//		if err := json.NewDecoder(resp.Body).Decode(&repoMetaData); err != nil {
+//			return nil, err
+//		}
+//
+//		repos[i].Name = repoMetaData.Name
+//		repos[i].HTMLURL = repoMetaData.HTMLURL
+//		repos[i].Language = repoMetaData.Language
+//		repos[i].PullsURL = repoMetaData.PullsURL
+//		repos[i].Stars = repoMetaData.Stars
+//	}
+//	return repos, nil
+//}
+
+// add based on star count too
+// add language filter
+// default daysAgo to 1
+func fetchRecentPulls(daysAgo int) ([]PullRequest, error) {
+	cutoff := time.Now().AddDate(0, 0, -daysAgo).Format("2006-01-02")
+
+	url := fmt.Sprintf(
+		"https://api.github.com/search/issues?q=type:pr+state:open+created:>=%s&sort=created&order=desc",
+		cutoff,
+	)
+
+	//// Trim the template suffix
+	//url := strings.Split(pullsURL, "{")[0] + fmt.Sprintf("?state=open&sort=created&direction=desc&per_page=%d", perPage)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var prs []PullRequest
+	var prs SearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&prs); err != nil {
 		return nil, err
 	}
-	return prs, nil
+	return prs.Items, nil
 }
