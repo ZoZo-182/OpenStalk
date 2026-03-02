@@ -35,12 +35,12 @@ func reposFromPrs(prList []PullRequest) ([]string, error) {
 // add based on star count too
 // add language filter
 // default daysAgo to 1
-func fetchRecentPulls(daysAgo int) ([]PullRequest, error) {
+func fetchRecentPulls(daysAgo int, language string) ([]PullRequest, error) {
 	cutoff := time.Now().AddDate(0, 0, -daysAgo).Format("2006-01-02")
 
 	url := fmt.Sprintf(
-		"https://api.github.com/search/issues?q=type:pr+state:open+created:>=%s+stars:100..500&sort=created&order=desc",
-		cutoff,
+		"https://api.github.com/search/issues?q=type:pr+state:open+created:>=%s+stars:100..500+language:%s&sort=created&order=desc",
+		cutoff, language,
 	)
 
 	//// Trim the template suffix
