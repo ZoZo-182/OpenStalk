@@ -32,8 +32,6 @@ func reposFromPrs(prList []PullRequest) ([]string, error) {
 	return repoURLs, nil
 }
 
-// add based on star count too
-// add language filter
 // default daysAgo to 1
 func fetchRecentPulls(daysAgo int, language string) ([]PullRequest, error) {
 	cutoff := time.Now().AddDate(0, 0, -daysAgo).Format("2006-01-02")

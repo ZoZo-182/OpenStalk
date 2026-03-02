@@ -22,6 +22,7 @@ func main() {
 		fmt.Println("error fetching recent prs (main).")
 	}
 
+	// change error message to be more specific (lang + time not recent enough)
 	repoUrl, err := reposFromPrs(prList)
 	if err != nil {
 		fmt.Println("error getting repo url from pr url (main).")
