@@ -1,7 +1,7 @@
 ## About The Project
 I would like to contribute to OSS some point in my life, but there's a huge problem:
 I have never come across a project I felt passionate enough about to contribute, so 
-I made OpenStalk!
+I made OpenStalk! \
 *Originally done (more like slopped together) during [Boot.Dev's](https://www.boot.dev/dashboard) July 2025 Hackathon!*
 
 ## Installation / Getting Started
