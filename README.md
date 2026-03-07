@@ -19,4 +19,4 @@ I made OpenStalk!
 MIT. See `LICENSE.txt` for more information.
 
 ## Contact
-[Discord](https://Discord.com/Capacitance)
+[Discord](https://Discord.com/users/Capacitance)
