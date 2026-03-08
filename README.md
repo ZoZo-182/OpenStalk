@@ -20,7 +20,3 @@ I made OpenStalk! \
 
 ## License
 MIT. See `LICENSE.txt` for more information.
-
-
-## Contact
-<a href="https://Discord.com/users/Capacitance" target="blank_"> Discord </a>
