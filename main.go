@@ -2,22 +2,20 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"strconv"
+	"github.com/alecthomas/kong"
 	"strings"
 )
 
+var CLI struct {
+	Language string `help:"Programming Language to filter PRs by." short:"l" optional:""`
+	Days     int    `help:"Number of days to look back." short:"d" default:"1" optional:""`
+}
+
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Println("Need at least 3 arguments. Format: ./OpenStalk [language] [within (days)]")
-	}
-
-	daysAgo, err := strconv.Atoi(os.Args[2])
-
-	language := strings.ToLower(os.Args[1])
+	kong.Parse(&CLI)
 
 	// get slice of recent prs
-	prList, err := fetchRecentPulls(daysAgo, language)
+	prList, err := fetchRecentPulls(CLI.Days, strings.ToLower(CLI.Language))
 	if err != nil {
 		fmt.Println("error fetching recent prs (main).")
 	}
@@ -31,4 +29,5 @@ func main() {
 	for i, repo := range repoUrl {
 		fmt.Printf("repo %d: %v\n", i+1, repo)
 	}
+
 }

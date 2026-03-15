@@ -3,6 +3,7 @@ module github.com/ZoZo-182/OpenStalk
 go 1.24.1
 
 require (
+	github.com/alecthomas/kong v1.14.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/bubbles v0.21.0 // indirect
