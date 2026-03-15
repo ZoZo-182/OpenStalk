@@ -36,13 +36,18 @@ func reposFromPrs(prList []PullRequest) ([]string, error) {
 func fetchRecentPulls(daysAgo int, language string) ([]PullRequest, error) {
 	cutoff := time.Now().AddDate(0, 0, -daysAgo).Format("2006-01-02")
 
+	var query string
+	if language != "" {
+		query = fmt.Sprintf("type:pr+state:open+created:>=%s+stars:100..500+language:%s", cutoff, language)
+	} else {
+		query = fmt.Sprintf("type:pr+state:open+created:>=%s+stars:100..500", cutoff)
+	}
+
 	url := fmt.Sprintf(
-		"https://api.github.com/search/issues?q=type:pr+state:open+created:>=%s+stars:100..500+language:%s&sort=created&order=desc",
-		cutoff, language,
+		"https://api.github.com/search/issues?q=%s&sort=created&order=desc",
+		query,
 	)
 
-	//// Trim the template suffix
-	//url := strings.Split(pullsURL, "{")[0] + fmt.Sprintf("?state=open&sort=created&direction=desc&per_page=%d", perPage)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

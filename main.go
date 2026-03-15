@@ -23,7 +23,7 @@ func main() {
 	// change error message to be more specific (lang + time not recent enough)
 	repoUrl, err := reposFromPrs(prList)
 	if err != nil {
-		fmt.Println("error getting repo url from pr url (main).")
+		fmt.Printf("No recent PRs to %s based repositories within the last %d day(s)\n", CLI.Language, CLI.Days)
 	}
 
 	for i, repo := range repoUrl {
