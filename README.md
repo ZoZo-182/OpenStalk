@@ -1,7 +1,7 @@
 ## About The Project
 I would like to contribute to OSS some point in my life, but there's a huge problem:
-I have never come across a project I felt passionate enough about to contribute, so 
-I made OpenStalk! 
+I have never come across a project I felt passionate enough about to fork my own version of, let alone contribute to, so 
+I made OpenStalk! It's supposed to introduce you to active github projects that you could see yourself using hopefully before you even think about contributing.
 
 *Originally done (more like slopped together) during [Boot.Dev's](https://www.boot.dev/dashboard) July 2025 Hackathon!*
 
