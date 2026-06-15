@@ -7,9 +7,21 @@ import (
 )
 
 var CLI struct {
-	Language string `help:"Programming Language to filter PRs by." short:"l" optional:""`
-	Days     int    `help:"Number of days to look back." short:"d" default:"1" optional:""`
+	NoBanner bool       `help:"Hide the OpenStalk banner."`
+	Search   SearchCmd  `cmd:"" help:"Search Github for recent open pull requests."`
+	Version  VersionCmd `cmd:"" help:"Print version info"`
 }
+
+type SearchCmd struct {
+	Language string `help:"Programming Language to filter PRs by." short:"l"`
+	Days     int    `help:"Number of days to look back." short:"d" default:"1"`
+	Limit    int    `help:"Maximum number of result to show." short:"n" default:"10"`
+	MinStars int    `help:"Minimum repo stars." default:"100"`
+	MaxStars int    `help:"Maximum repo stars." default:"500"`
+}
+
+// no subs for now
+type VersionCmd struct{}
 
 func main() {
 	kong.Parse(&CLI)
