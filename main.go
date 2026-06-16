@@ -20,26 +20,47 @@ type SearchCmd struct {
 	MaxStars int    `help:"Maximum repo stars." default:"500"`
 }
 
+func (cmd *SearchCmd) Run() error {
+	// get slice of recent prs
+	prList, err := fetchRecentPulls(SearchOptions{
+		Days:     cmd.Days,
+		Language: strings.ToLower(cmd.Language),
+		Limit:    cmd.Limit,
+		MinStars: cmd.MinStars,
+		MaxStars: cmd.MaxStars,
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(prList) == 0 {
+		fmt.Printf("No recent PRs to %s based repositories within the last %d day(s).\n", cmd.Language, cmd.Days)
+		return nil
+	}
+
+	// make this
+	printPullRequests(prList)
+	return nil
+}
+
 // no subs for now
 type VersionCmd struct{}
 
+func (cmd *VersionCmd) Run() error {
+	fmt.Println("openstalk some build time version")
+	return nil
+}
+
 func main() {
-	kong.Parse(&CLI)
+	ctx := kong.Parse(&CLI,
+		kong.Name("openstalk"),
+		kong.Description("Find active open source projects through GitHub pull request activity."),
+	)
 
-	// get slice of recent prs
-	prList, err := fetchRecentPulls(CLI.Days, strings.ToLower(CLI.Language))
-	if err != nil {
-		fmt.Println("error fetching recent prs (main).")
+	if !CLI.NoBanner {
+		printBanner()
 	}
 
-	// change error message to be more specific (lang + time not recent enough)
-	repoUrl, err := reposFromPrs(prList)
-	if err != nil {
-		fmt.Printf("No recent PRs to %s based repositories within the last %d day(s)\n", CLI.Language, CLI.Days)
-	}
-
-	for i, repo := range repoUrl {
-		fmt.Printf("repo %d: %v\n", i+1, repo)
-	}
-
+	err := ctx.Run()
+	ctx.FatalIfErrorf(err)
 }

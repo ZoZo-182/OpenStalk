@@ -17,6 +17,14 @@ type SearchResponse struct {
 	Items []PullRequest `json:"items"`
 }
 
+type SearchOptions struct {
+	Days      int
+	Lanaguage string
+	Limit     int
+	MinStars  int
+	MaxStars  int
+}
+
 func reposFromPrs(prList []PullRequest) ([]string, error) {
 	repoURLs := []string{}
 
@@ -32,7 +40,7 @@ func reposFromPrs(prList []PullRequest) ([]string, error) {
 	return repoURLs, nil
 }
 
-// default daysAgo to 1
+// change param to SearchOptions type and edit function based off that.
 func fetchRecentPulls(daysAgo int, language string) ([]PullRequest, error) {
 	cutoff := time.Now().AddDate(0, 0, -daysAgo).Format("2006-01-02")
 
