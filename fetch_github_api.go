@@ -19,7 +19,7 @@ type SearchResponse struct {
 
 type SearchOptions struct {
 	Days      int
-	Lanaguage string
+	Language string
 	Limit     int
 	MinStars  int
 	MaxStars  int
@@ -40,13 +40,12 @@ func reposFromPrs(prList []PullRequest) ([]string, error) {
 	return repoURLs, nil
 }
 
-// change param to SearchOptions type and edit function based off that.
-func fetchRecentPulls(daysAgo int, language string) ([]PullRequest, error) {
-	cutoff := time.Now().AddDate(0, 0, -daysAgo).Format("2006-01-02")
+func fetchRecentPulls(opts SearchOptions) ([]PullRequest, error) {
+	cutoff := time.Now().AddDate(0, 0, -opts.Days).Format("2006-01-02")
 
 	var query string
-	if language != "" {
-		query = fmt.Sprintf("type:pr+state:open+created:>=%s+stars:100..500+language:%s", cutoff, language)
+	if opts.Language != "" {
+		query = fmt.Sprintf("type:pr+state:open+created:>=%s+stars:100..500+language:%s", cutoff, opts.Language)
 	} else {
 		query = fmt.Sprintf("type:pr+state:open+created:>=%s+stars:100..500", cutoff)
 	}
