@@ -41,13 +41,16 @@ func reposFromPrs(prList []PullRequest) ([]string, error) {
 }
 
 func fetchRecentPulls(opts SearchOptions) ([]PullRequest, error) {
+	opts = defaultSearchOptions(opts)
+
 	cutoff := time.Now().AddDate(0, 0, -opts.Days).Format("2006-01-02")
 
 	query := buildSearchQuery(opts, cutoff)
 
 	url := fmt.Sprintf(
-		"https://api.github.com/search/issues?q=%s&sort=created&order=desc",
+		"https://api.github.com/search/issues?q=%s&sort=created&order=desc&per_page=%d",
 		query,
+		opts.Limit,
 	)
 
 	resp, err := http.Get(url)

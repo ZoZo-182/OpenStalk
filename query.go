@@ -19,3 +19,19 @@ func buildSearchQuery(opts SearchOptions, cutoff string) string {
 
 	return strings.Join(parts, " ")
 }
+
+func defaultSearchOptions(opts SearchOptions) SearchOptions {
+	if opts.Days <= 0 {
+		opts.Days = 1
+	}
+	if opts.Limit <= 0 {
+		opts.Limit = 10
+	}
+	if opts.MinStars < 0 {
+		opts.MinStars = 0
+	}
+	if opts.MaxStars <= 0 {
+		opts.MaxStars = 500
+	}
+	return opts
+}

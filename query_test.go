@@ -28,3 +28,20 @@ func TestBuildSearchQueryIncludeLanguage(t *testing.T) {
 		t.Fatalf("expected %q, got %q", want, query)
 	}
 }
+
+func TestDefaultSearchOptions(t *testing.T) {
+	options := defaultSearchOptions(SearchOptions{})
+
+	if options.Days != 1 {
+		t.Fatalf("expected Days to default to 1, got %d", options.Days)
+	}
+	if options.Limit != 10 {
+		t.Fatalf("expected Limit to default to 10, got %d", options.Limit)
+	}
+	if options.MaxStars != 500 {
+		t.Fatalf("expected MaxStars to default to 500, got %d", options.MaxStars)
+	}
+	if options.MinStars != 0 {
+		t.Fatalf("expected MinStars to default to 0, got %d", options.MinStars)
+	}
+}
