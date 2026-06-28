@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"net/url"
 )
 
 type PullRequest struct {
@@ -47,13 +48,13 @@ func fetchRecentPulls(opts SearchOptions) ([]PullRequest, error) {
 
 	query := buildSearchQuery(opts, cutoff)
 
-	url := fmt.Sprintf(
+	requestedURL := fmt.Sprintf(
 		"https://api.github.com/search/issues?q=%s&sort=created&order=desc&per_page=%d",
-		query,
+		url.QueryEscape(query),
 		opts.Limit,
 	)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(requestedURL)
 	if err != nil {
 		return nil, err
 	}
