@@ -27,8 +27,8 @@ func defaultSearchOptions(opts SearchOptions) SearchOptions {
 	if opts.Limit <= 0 {
 		opts.Limit = 10
 	}
-	if opts.MinStars < 0 {
-		opts.MinStars = 0
+	if opts.MinStars <= 0 {
+		opts.MinStars = 100
 	}
 	if opts.MaxStars <= 0 {
 		opts.MaxStars = 500
