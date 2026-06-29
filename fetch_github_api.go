@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 	"net/url"
+	"os"
 )
 
 type PullRequest struct {
@@ -54,11 +55,30 @@ func fetchRecentPulls(opts SearchOptions) ([]PullRequest, error) {
 		opts.Limit,
 	)
 
-	resp, err := http.Get(requestedURL)
+	req, err := http.NewRequest(http.MethodGet, requestedURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("User-Agent", "OpenStalk")
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	client := http.Client{
+		Timeout: 15 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+
+	if resp.StatusCode == http.StatusForbidden {
+		return nil, fmt.Errorf("Github API rate limit reached; set GITHUB_TOKEN for a higher limit")
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("Github API request failed: %s", resp.Status)
+	}
 
 	var prs SearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&prs); err != nil {
