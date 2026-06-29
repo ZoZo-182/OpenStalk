@@ -18,9 +18,12 @@ type SearchCmd struct {
 	Limit    int    `help:"Maximum number of result to show." short:"n" default:"10"`
 	MinStars int    `help:"Minimum repo stars." default:"100"`
 	MaxStars int    `help:"Maximum repo stars." default:"500"`
+	Format   string `help:"Output format." enum:"text,json" default:"text"`
 }
 
 func (cmd *SearchCmd) Run() error {
+	printBanner()
+
 	// get slice of recent prs
 	prList, err := fetchRecentPulls(SearchOptions{
 		Days:     cmd.Days,
@@ -38,8 +41,12 @@ func (cmd *SearchCmd) Run() error {
 		return nil
 	}
 
-	// make this
+	if cmd.Format == "json" {
+		return printJSON(prList)
+	}
+
 	printPullRequests(prList)
+
 	return nil
 }
 

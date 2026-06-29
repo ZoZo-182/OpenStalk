@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"encoding/json"
+	"os"
+)
 
 func printBanner() {
 	fmt.Print(`
@@ -21,4 +25,10 @@ func printPullRequests(prs []PullRequest) {
 		fmt.Printf("    %s\n", pr.HTMLURL)
 		fmt.Println()
 	}
+}
+
+func printJSON(results []PullRequest) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(results)
 }

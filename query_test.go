@@ -41,7 +41,7 @@ func TestDefaultSearchOptions(t *testing.T) {
 	if options.MaxStars != 500 {
 		t.Fatalf("expected MaxStars to default to 500, got %d", options.MaxStars)
 	}
-	if options.MinStars != 0 {
-		t.Fatalf("expected MinStars to default to 0, got %d", options.MinStars)
+	if options.MinStars != 100 {
+		t.Fatalf("expected MinStars to default to 100, got %d", options.MinStars)
 	}
 }
