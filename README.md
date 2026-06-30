@@ -1,18 +1,30 @@
 ![cute badge](https://github.com/ZoZo-182/OpenStalk/actions/workflows/test.yml/badge.svg)
+
 ## About The Project
-I would like to contribute to OSS some point in my life, but there's a huge problem:
-I have never come across a project I felt passionate enough about to fork my own version of, let alone contribute to, so 
-I made OpenStalk! It's supposed to introduce you to active github projects that you could see yourself using hopefully before you even think about contributing.
+OpenStalk is a Go CLI that helps developers discover active open source projects by
+searching GitHub for recent open pull requests.
 
-*Originally done (more like slopped together) during [Boot.Dev's](https://www.boot.dev/dashboard) July 2025 Hackathon!*
+It is built for finding projects people are actively working on, so you can discover
+more tools or just cool projects in general.
 
+## Installation
+Install the latest tagged release with Go:
 
-## Installation / Getting Started
-1. Have go? (go version)
-2. git clone https://github.com/ZoZo-182/OpenStalk.git
-3. cd OpenStalk
-4. build: go build -o OpenStalk
-5. run: ./OpenStalk
+```sh
+go install github.com/ZoZo-182/openstalk@latest
+```
+
+Make sure your Go binary directory is on your `PATH`:
+
+```sh
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+Then run:
+
+```sh
+openstalk search
+```
 
 ## Github API Token
 OpenStalk can run without a Github token, but unauthenticated Github API requests are heavily rate-limited.
