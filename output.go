@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"encoding/json"
-	"os"
+	"io"
 )
 
 func printBanner() {
@@ -27,8 +27,8 @@ func printPullRequests(prs []PullRequest) {
 	}
 }
 
-func printJSON(results []PullRequest) error {
-	encoder := json.NewEncoder(os.Stdout)
+func printJSON(w io.Writer, results []PullRequest) error {
+	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(results)
 }

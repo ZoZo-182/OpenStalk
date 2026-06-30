@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alecthomas/kong"
 	"strings"
+	"os"
 )
 
 var CLI struct {
@@ -24,7 +25,7 @@ type SearchCmd struct {
 func (cmd *SearchCmd) Run() error {
 	printBanner()
 
-	// get slice of recent prs
+	// get slice of recent prsmain
 	prList, err := fetchRecentPulls(SearchOptions{
 		Days:     cmd.Days,
 		Language: strings.ToLower(cmd.Language),
@@ -42,7 +43,7 @@ func (cmd *SearchCmd) Run() error {
 	}
 
 	if cmd.Format == "json" {
-		return printJSON(prList)
+		return printJSON(os.Stdout, prList)
 	}
 
 	printPullRequests(prList)
