@@ -1,11 +1,19 @@
-![cute badge](https://github.com/ZoZo-182/OpenStalk/actions/workflows/test.yml/badge.svg)
+# OpenStalk
 
-## About The Project
+![Test](https://github.com/ZoZo-182/OpenStalk/actions/workflows/test.yml/badge.svg)
+
 OpenStalk is a Go CLI that helps developers discover active open source projects by
-searching GitHub for recent open pull requests.
-
-It is built for finding projects people are actively working on, so you can discover
+searching GitHub for recent open pull requests. It is built for finding projects people are actively working on, so you can discover
 more tools or just cool projects in general.
+
+## Features
+
+- Search recent open pull requests on GitHub
+- Filter by programming language
+- Filter by star range
+- Limit result count
+- Output text or JSON
+- Use `GITHUB_TOKEN` for higher GitHub API limits
 
 ## Installation
 Install the latest tagged release with Go:
@@ -58,4 +66,4 @@ export GITHUB_TOKEN=some_token
 ```
 
 ## License
-MIT. See `LICENSE.txt` for more information.
+MIT. See `LICENSE` for more information.

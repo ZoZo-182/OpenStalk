@@ -71,6 +71,10 @@ func fetchRecentPulls(opts SearchOptions) ([]PullRequest, error) {
 	}
 
 	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusForbidden {
 		return nil, fmt.Errorf("Github API rate limit reached; set GITHUB_TOKEN for a higher limit")
