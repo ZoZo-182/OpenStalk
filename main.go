@@ -23,9 +23,6 @@ type SearchCmd struct {
 }
 
 func (cmd *SearchCmd) Run() error {
-	printBanner()
-
-	// get slice of recent prsmain
 	prList, err := fetchRecentPulls(SearchOptions{
 		Days:     cmd.Days,
 		Language: strings.ToLower(cmd.Language),
