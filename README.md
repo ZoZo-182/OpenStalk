@@ -1,3 +1,4 @@
+https://github.com/ZoZo-182//actions/workflows/test.yml/badge.svg
 ## About The Project
 I would like to contribute to OSS some point in my life, but there's a huge problem:
 I have never come across a project I felt passionate enough about to fork my own version of, let alone contribute to, so 
