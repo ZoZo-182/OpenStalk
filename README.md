@@ -20,24 +20,42 @@ Make sure your Go binary directory is on your `PATH`:
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
 
-Then run:
+## Usage
+
+Search for recent open pull requests:
 
 ```sh
 openstalk search
 ```
 
-## Github API Token
-OpenStalk can run without a Github token, but unauthenticated Github API requests are heavily rate-limited.
+Filter by language:
 
-To increase the rate limit, create a Github personal access token and set:
-```sh 
-export GITHUB_TOKEN=some_token
+```sh
+openstalk search --language go
 ```
 
+Use short flags:
 
-## Cute Demo (OLD PLEASE UPDATE -> Usage)
-![Demo](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWkydndtOXRvZHNjMTZydjl6amlwY2swMWh6Yno4eXF1cDZyZnNjOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JPCjH5tkIps3xY3pFt/giphy.gif)
+```sh
+openstalk search -l go -d 7 -n 5
+```
 
+Show help:
+
+```sh
+openstalk --help
+openstalk search --help
+```
+
+## GitHub API Token
+
+OpenStalk can run without a GitHub token, but unauthenticated GitHub API requests are heavily rate-limited.
+
+To increase the rate limit, create a GitHub personal access token and set:
+
+```sh
+export GITHUB_TOKEN=some_token
+```
 
 ## License
 MIT. See `LICENSE.txt` for more information.
