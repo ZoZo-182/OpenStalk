@@ -9,7 +9,7 @@ import (
 
 var CLI struct {
 	NoBanner bool       `help:"Hide the OpenStalk banner."`
-	Search   SearchCmd  `cmd:"" help:"Search Github for recent open pull requests."`
+	Search   SearchCmd  `cmd:"" help:"Search Github for recent open pull requests." default:"1"`
 	Version  VersionCmd `cmd:"" help:"Print version info"`
 }
 
@@ -19,7 +19,7 @@ type SearchCmd struct {
 	Limit    int    `help:"Maximum number of result to show." short:"n" default:"10"`
 	MinStars int    `help:"Minimum repo stars." default:"100"`
 	MaxStars int    `help:"Maximum repo stars." default:"500"`
-	Format   string `help:"Output format." enum:"text,json" default:"text"`
+	Format   string `help:"Output format." enum:"text,json, markdown" default:"text"`
 }
 
 func (cmd *SearchCmd) Run() error {

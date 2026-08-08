@@ -1,4 +1,4 @@
-module github.com/ZoZo-182/openstalk
+module github.com/ZoZo-182/openstalk/v2
 
 go 1.24.1
 

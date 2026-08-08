@@ -19,7 +19,7 @@ more tools or just cool projects in general.
 Install the latest tagged release with Go:
 
 ```sh
-go install github.com/ZoZo-182/openstalk@latest
+go install github.com/ZoZo-182/openstalk/v2@latest
 ```
 
 Make sure your Go binary directory is on your `PATH`:
@@ -33,7 +33,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 Search for recent open pull requests:
 
 ```sh
-openstalk search
+openstalk
 ```
 
 Filter by language:
