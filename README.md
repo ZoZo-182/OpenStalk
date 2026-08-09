@@ -10,7 +10,6 @@ more tools or just cool projects in general.
 
 - Search recent open pull requests on GitHub
 - Filter by programming language
-- Filter by star range
 - Limit result count
 - Output text or JSON
 - Use `GITHUB_TOKEN` for higher GitHub API limits

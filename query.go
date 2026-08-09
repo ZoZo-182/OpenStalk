@@ -10,7 +10,6 @@ func buildSearchQuery(opts SearchOptions, cutoff string) string {
 		"type:pr",
 		"state:open",
 		fmt.Sprintf("created:>=%s", cutoff),
-		fmt.Sprintf("stars:%d..%d", opts.MinStars, opts.MaxStars),
 	}
 
 	if opts.Language != "" {
@@ -26,12 +25,6 @@ func defaultSearchOptions(opts SearchOptions) SearchOptions {
 	}
 	if opts.Limit <= 0 {
 		opts.Limit = 10
-	}
-	if opts.MinStars <= 0 {
-		opts.MinStars = 100
-	}
-	if opts.MaxStars <= 0 {
-		opts.MaxStars = 500
 	}
 	return opts
 }
