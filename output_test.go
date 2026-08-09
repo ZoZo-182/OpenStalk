@@ -11,7 +11,7 @@ func TestPrintJSONWriteResults(t *testing.T) {
 
 	err := printJSON(&out, []PullRequest{
 		{
-			Title: "Slop together the solution to non existent problem",
+			Title:   "Slop together the solution to non existent problem",
 			HTMLURL: "https://github.com/user/repo/pull/384",
 		},
 	})

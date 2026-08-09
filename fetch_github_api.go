@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
 	"net/url"
 	"os"
+	"time"
 )
 
 type PullRequest struct {
@@ -23,23 +22,6 @@ type SearchOptions struct {
 	Days     int
 	Language string
 	Limit    int
-	MinStars int
-	MaxStars int
-}
-
-func reposFromPrs(prList []PullRequest) ([]string, error) {
-	repoURLs := []string{}
-
-	for _, pr := range prList {
-		url := strings.Split(pr.HTMLURL, "/pull")[0]
-		repoURLs = append(repoURLs, url)
-	}
-
-	if len(repoURLs) == 0 {
-		return nil, fmt.Errorf("empty / nil repo urls from prs (reposFromPrs).")
-	}
-
-	return repoURLs, nil
 }
 
 func fetchRecentPulls(opts SearchOptions) ([]PullRequest, error) {

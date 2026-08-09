@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/alecthomas/kong"
-	"strings"
 	"os"
+	"strings"
 )
 
 var CLI struct {
@@ -17,8 +17,6 @@ type SearchCmd struct {
 	Language string `help:"Programming Language to filter PRs by." short:"l"`
 	Days     int    `help:"Number of days to look back." short:"d" default:"1"`
 	Limit    int    `help:"Maximum number of result to show." short:"n" default:"10"`
-	MinStars int    `help:"Minimum repo stars." default:"100"`
-	MaxStars int    `help:"Maximum repo stars." default:"500"`
 	Format   string `help:"Output format." enum:"text,json, markdown" default:"text"`
 }
 
@@ -27,8 +25,6 @@ func (cmd *SearchCmd) Run() error {
 		Days:     cmd.Days,
 		Language: strings.ToLower(cmd.Language),
 		Limit:    cmd.Limit,
-		MinStars: cmd.MinStars,
-		MaxStars: cmd.MaxStars,
 	})
 	if err != nil {
 		return err
@@ -56,13 +52,17 @@ func (cmd *VersionCmd) Run() error {
 	return nil
 }
 
+func shouldPrintBanner(args []string, noBanner bool) bool {
+	return len(args) == 0 && !noBanner
+}
+
 func main() {
 	ctx := kong.Parse(&CLI,
 		kong.Name("openstalk"),
 		kong.Description("Find active open source projects through GitHub pull request activity."),
 	)
 
-	if !CLI.NoBanner {
+	if shouldPrintBanner(os.Args, CLI.NoBanner) {
 		printBanner()
 	}
 
